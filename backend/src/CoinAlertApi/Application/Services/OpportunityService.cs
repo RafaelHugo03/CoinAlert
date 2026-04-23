@@ -3,21 +3,17 @@ using CoinAlertApi.Application.Interfaces;
 using CoinAlertApi.Domain.Entities;
 using CoinAlertApi.Domain.Enums;
 using CoinAlertApi.Domain.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace CoinAlertApi.Application.Services;
 
-public class OpportunityService : IOpportunityService
+public class OpportunityService(
+    IOpportunityRepository repository,
+    ILogger<OpportunityService> logger) : IOpportunityService
 {
-    private readonly IOpportunityRepository _repository;
-    public OpportunityService(IOpportunityRepository repository)
-    {
-        _repository = repository;
-    }
-
-
     public async Task<List<OpportunityDto>> GetAllAsync()
     {
-        var entities = await _repository.GetAllAsync();
+        var entities = await repository.GetAllAsync();
         return entities.Select(OpportunityDto.FromEntity).ToList();
     }
 
@@ -33,14 +29,22 @@ public class OpportunityService : IOpportunityService
             CreatedAt = DateTime.UtcNow
         };
 
-        await _repository.InsertAsync(entity);
+        await repository.InsertAsync(entity);
 
-        var result = OpportunityDto.FromEntity(entity);
-        return result;
+        logger.LogInformation("Opportunity created — Id: {Id}", entity.Id);
+        return OpportunityDto.FromEntity(entity);
     }
 
     public async Task<bool> DeleteAsync(string id)
     {
-        return await _repository.DeleteAsync(id);
+        var deleted = await repository.DeleteAsync(id);
+
+        if(!deleted){
+            logger.LogWarning("Attempted to delete non-existent opportunity — Id: {Id}", id);
+            return deleted;
+        }
+
+        logger.LogInformation("Opportunity deleted — Id: {Id}", id);
+        return deleted;
     }
 }
