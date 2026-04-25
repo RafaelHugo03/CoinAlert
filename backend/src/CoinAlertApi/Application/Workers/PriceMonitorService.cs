@@ -65,6 +65,7 @@ public class PriceMonitorService(
                 return;
 
             opportunity.Status = OpportunityStatus.Triggered;
+            opportunity.CurrentPrice = price;
             opportunity.TriggeredAt = DateTime.UtcNow;
 
             await repository.UpdateAsync(opportunity.Id, opportunity);
