@@ -3,7 +3,6 @@ using CoinAlertApi.Application.Interfaces;
 using CoinAlertApi.Domain.Entities;
 using CoinAlertApi.Domain.Enums;
 using CoinAlertApi.Domain.Interfaces;
-using Microsoft.Extensions.Logging;
 
 namespace CoinAlertApi.Application.Services;
 

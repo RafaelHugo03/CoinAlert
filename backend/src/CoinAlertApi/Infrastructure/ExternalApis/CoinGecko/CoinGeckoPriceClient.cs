@@ -1,5 +1,3 @@
-using System.Net.Http.Json;
-
 namespace CoinAlertApi.Infrastructure.ExternalApis.CoinGecko;
 
 public class CoinGeckoPriceClient(IHttpClientFactory factory)

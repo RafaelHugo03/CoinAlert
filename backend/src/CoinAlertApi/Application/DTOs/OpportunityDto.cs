@@ -9,7 +9,6 @@ public class OpportunityDto
     public string CryptoId { get; set; } = string.Empty;
     public OpportunityType Type { get; set; }
     public decimal TargetPrice { get; set; }
-    public string Currency { get; set; } = string.Empty;
     public OpportunityStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? TriggeredAt { get; set; }
