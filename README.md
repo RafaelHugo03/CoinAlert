@@ -166,7 +166,9 @@ Acesse a UI do Jaeger em http://localhost:16686 e selecione o serviço `CoinAler
 
 ### Pré-requisitos
 
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (já inclui o Docker Compose)
+- Docker
+- Docker Compose
+
 
 ### Primeira execução
 
