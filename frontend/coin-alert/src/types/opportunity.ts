@@ -13,6 +13,7 @@ export interface Opportunity {
   cryptoId: string
   type: OpportunityType
   targetPrice: number
+  currentPrice: number
   status: OpportunityStatus
   createdAt: string
   triggeredAt: string | null
