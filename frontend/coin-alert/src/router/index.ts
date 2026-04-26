@@ -15,6 +15,11 @@ const router = createRouter({
       name: 'opportunities',
       component: OpportuinitiesView
     },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: DashboardView
+    }
   ],
 })
 
