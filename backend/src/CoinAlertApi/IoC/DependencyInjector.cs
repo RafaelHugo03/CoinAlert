@@ -1,6 +1,6 @@
-using CoinAlertApi.Application.Workers;
 using CoinAlertApi.Application.Interfaces;
 using CoinAlertApi.Application.Services;
+using CoinAlertApi.Application.Workers;
 using CoinAlertApi.Domain.Interfaces;
 using CoinAlertApi.Infrastructure.ExternalApis.CoinGecko;
 using CoinAlertApi.Infrastructure.Persistence;
@@ -40,6 +40,7 @@ public static class DependencyInjector
     public static void RegisterServices(this IServiceCollection services)
     {
         services.AddScoped<IOpportunityService, OpportunityService>();
+        services.AddScoped<ICryptoPriceService, CryptoPriceService>();
     }
 
     public static void RegisterHttpClients(this IServiceCollection services)

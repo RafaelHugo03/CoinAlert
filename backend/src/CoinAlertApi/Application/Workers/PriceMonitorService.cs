@@ -1,5 +1,6 @@
 using CoinAlertApi.Application.DTOs;
 using CoinAlertApi.Application.Hubs;
+using CoinAlertApi.Application.Interfaces;
 using CoinAlertApi.Domain.Entities;
 using CoinAlertApi.Domain.Enums;
 using CoinAlertApi.Domain.Interfaces;
@@ -9,12 +10,12 @@ using Microsoft.AspNetCore.SignalR;
 namespace CoinAlertApi.Application.Workers;
 
 public class PriceMonitorService(
-    CoinGeckoPriceClient coinGeckoClient,
+    ICryptoPriceService cryptoPriceService,
     IHubContext<CryptoPriceHub, ICryptoPriceHubClient> hubContext,
     IServiceScopeFactory scopeFactory,
     ILogger<PriceMonitorService> logger) : BackgroundService
 {
-    private static readonly TimeSpan Interval = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan Interval = TimeSpan.FromSeconds(10);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -35,14 +36,14 @@ public class PriceMonitorService(
 
     private async Task ProcessAsync(CancellationToken ct)
     {
-        var prices = await coinGeckoClient.GetPricesAsync();
-        if (prices is null)
+        var updates = await cryptoPriceService.GetAllAndTransmitAsync();
+        if (updates is null)
         {
             logger.LogWarning("CoinGecko returned null response");
             return;
         }
 
-        await TransmitCryptoPrices(prices);
+        var priceMap = updates.ToDictionary(u => u.CryptoId, u => u.Usd);
 
         await using var scope = scopeFactory.CreateAsyncScope();
         var repository = scope.ServiceProvider.GetRequiredService<IOpportunityRepository>();
@@ -52,10 +53,8 @@ public class PriceMonitorService(
 
         await Parallel.ForEachAsync(active, ct, async (opportunity, token) =>
         {
-            if (!prices.TryGetValue(opportunity.CryptoId, out var coinPrice))
+            if (!priceMap.TryGetValue(opportunity.CryptoId, out var price))
                 return;
-
-            var price = coinPrice.Usd;
 
             var isTriggered = opportunity.Type == OpportunityType.Buy
                 ? price <= opportunity.TargetPrice
@@ -88,16 +87,5 @@ public class PriceMonitorService(
             opportunity.TargetPrice,
             price,
             opportunity.TriggeredAt!.Value));
-    }
-
-    private async Task TransmitCryptoPrices(Dictionary<string, CoinGeckoCoinPrice> prices)
-    {
-        var tasks = prices.Select(kvp =>
-        {
-            var update = new PriceUpdateDto(kvp.Key, kvp.Value.Usd, kvp.Value.Usd24hChange);
-            return Task.WhenAll(hubContext.Clients.All.ReceivePriceUpdate(update));
-        });
-
-        await Task.WhenAll(tasks);
     }
 }
