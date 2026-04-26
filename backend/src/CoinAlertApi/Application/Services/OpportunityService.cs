@@ -8,12 +8,23 @@ namespace CoinAlertApi.Application.Services;
 
 public class OpportunityService(
     IOpportunityRepository repository,
+    ICacheService cacheService,
     ILogger<OpportunityService> logger) : IOpportunityService
 {
     public async Task<List<OpportunityDto>> GetAllAsync()
     {
+        var cached = await cacheService.GetAsync<List<OpportunityDto>>(CacheKeys.Opportunities);
+        if (cached is not null)
+        {
+            logger.LogInformation("Opportunities served from cache");
+            return cached;
+        }
+
         var entities = await repository.GetAllAsync();
-        return entities.Select(OpportunityDto.FromEntity).ToList();
+        var dtos = entities.Select(OpportunityDto.FromEntity).ToList();
+
+        await cacheService.SetAsync(CacheKeys.Opportunities, dtos);
+        return dtos;
     }
 
     public async Task<OpportunityDto> CreateAsync(CreateOpportunityDto dto)
@@ -29,6 +40,7 @@ public class OpportunityService(
         };
 
         await repository.InsertAsync(entity);
+        await cacheService.InvalidateAsync(CacheKeys.Opportunities);
 
         logger.LogInformation("Opportunity created — Id: {Id}", entity.Id);
         return OpportunityDto.FromEntity(entity);
@@ -36,14 +48,17 @@ public class OpportunityService(
 
     public async Task<bool> DeleteAsync(string id)
     {
+
         var deleted = await repository.DeleteAsync(id);
 
-        if(!deleted){
+        if (!deleted)
+        {
             logger.LogWarning("Attempted to delete non-existent opportunity — Id: {Id}", id);
-            return deleted;
+            return false;
         }
 
+        await cacheService.InvalidateAsync(CacheKeys.Opportunities);
         logger.LogInformation("Opportunity deleted — Id: {Id}", id);
-        return deleted;
+        return true;
     }
 }

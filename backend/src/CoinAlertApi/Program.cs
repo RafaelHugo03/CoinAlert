@@ -12,6 +12,8 @@ builder.Services.RegisterDatabase();
 builder.Services.RegisterRepositories();
 builder.Services.RegisterServices();
 builder.Services.RegisterHttpClients();
+builder.Services.RegisterCache(builder.Configuration);
+builder.Services.RegisterObservability(builder.Configuration);
 builder.Services.RegisterSignalR();
 builder.Services.RegisterHostedServices();
 

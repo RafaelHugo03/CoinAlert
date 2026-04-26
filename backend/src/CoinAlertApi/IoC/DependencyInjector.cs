@@ -1,12 +1,17 @@
+using CoinAlertApi.Application;
 using CoinAlertApi.Application.Interfaces;
 using CoinAlertApi.Application.Services;
 using CoinAlertApi.Application.Workers;
 using CoinAlertApi.Domain.Interfaces;
+using CoinAlertApi.Infrastructure.Cache;
 using CoinAlertApi.Infrastructure.ExternalApis.CoinGecko;
+using CoinAlertApi.Infrastructure.Observability;
 using CoinAlertApi.Infrastructure.Persistence;
 using CoinAlertApi.Infrastructure.Repositories;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 
 namespace CoinAlertApi.IoC;
 
@@ -40,7 +45,7 @@ public static class DependencyInjector
     public static void RegisterServices(this IServiceCollection services)
     {
         services.AddScoped<IOpportunityService, OpportunityService>();
-        services.AddScoped<ICryptoPriceService, CryptoPriceService>();
+        services.AddSingleton<ICryptoPriceService, CryptoPriceService>();
     }
 
     public static void RegisterHttpClients(this IServiceCollection services)
@@ -53,6 +58,28 @@ public static class DependencyInjector
         });
 
         services.AddSingleton<CoinGeckoPriceClient>();
+    }
+
+    public static void RegisterCache(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = configuration["Redis:ConnectionString"];
+            options.InstanceName = "CoinAlert:";
+        });
+
+        services.AddSingleton<ICacheService, CacheService>();
+    }
+
+    public static void RegisterObservability(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddOpenTelemetry()
+            .ConfigureResource(r => r.AddService(Telemetry.ServiceName))
+            .WithTracing(tracing => tracing
+                .AddSource(Telemetry.ServiceName)
+                .AddAspNetCoreInstrumentation(opts => opts.RecordException = true)
+                .AddHttpClientInstrumentation()
+                .AddOtlpExporter(opts => opts.Endpoint = new Uri(configuration["Jaeger:OtlpEndpoint"] ?? "")));
     }
 
     public static void RegisterSignalR(this IServiceCollection services)

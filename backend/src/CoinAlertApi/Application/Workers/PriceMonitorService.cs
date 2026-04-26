@@ -4,18 +4,18 @@ using CoinAlertApi.Application.Interfaces;
 using CoinAlertApi.Domain.Entities;
 using CoinAlertApi.Domain.Enums;
 using CoinAlertApi.Domain.Interfaces;
-using CoinAlertApi.Infrastructure.ExternalApis.CoinGecko;
 using Microsoft.AspNetCore.SignalR;
 
 namespace CoinAlertApi.Application.Workers;
 
 public class PriceMonitorService(
     ICryptoPriceService cryptoPriceService,
+    ICacheService cacheService,
     IHubContext<CryptoPriceHub, ICryptoPriceHubClient> hubContext,
     IServiceScopeFactory scopeFactory,
     ILogger<PriceMonitorService> logger) : BackgroundService
 {
-    private static readonly TimeSpan Interval = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan Interval = TimeSpan.FromSeconds(5);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -44,7 +44,6 @@ public class PriceMonitorService(
         }
 
         var priceMap = updates.ToDictionary(u => u.CryptoId, u => u.Usd);
-
         await using var scope = scopeFactory.CreateAsyncScope();
         var repository = scope.ServiceProvider.GetRequiredService<IOpportunityRepository>();
 
@@ -68,6 +67,7 @@ public class PriceMonitorService(
             opportunity.TriggeredAt = DateTime.UtcNow;
 
             await repository.UpdateAsync(opportunity.Id, opportunity);
+            await cacheService.InvalidateAsync(CacheKeys.Opportunities);
 
             logger.LogInformation(
                 "Opportunity triggered — Id: {Id} | {CryptoId} {Type} | target: {Target} | current: {Current} usd",
@@ -76,6 +76,7 @@ public class PriceMonitorService(
 
             await TransmitOpportunity(opportunity, price);
         });
+
     }
 
     private async Task TransmitOpportunity(Opportunity opportunity, decimal price)

@@ -12,6 +12,32 @@ services:
       timeout: 5s
       retries: 5
 
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    container_name: coinalert-jaeger
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:16686"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: coinalert-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   api:
     build:
       context: ./backend
@@ -24,8 +50,14 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - MongoDB__ConnectionString=mongodb://mongodb:27017
       - MongoDB__DatabaseName=CoinAlert
+      - Redis__ConnectionString=redis:6379
+      - Jaeger__OtlpEndpoint=http://jaeger:4317
     depends_on:
       mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      jaeger:
         condition: service_healthy
 
   frontend:
