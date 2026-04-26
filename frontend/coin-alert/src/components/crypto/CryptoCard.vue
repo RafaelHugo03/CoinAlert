@@ -41,7 +41,7 @@ function formatChange(value: number): string {
         <div class="coin-name">{{ label(crypto.cryptoId) }}</div>
         <div class="coin-id">{{ crypto.cryptoId }}</div>
       </div>
-      <button class="btn-opportunity" @click="emit('createOpportunity', crypto.cryptoId)">+ Opportunity</button>
+      <button class="btn-opportunity" @click="emit('create-opportunity', crypto.cryptoId)">+ Opportunity</button>
     </div>
 
     <div class="card-price">{{ formatPrice(crypto.usd) }}</div>
