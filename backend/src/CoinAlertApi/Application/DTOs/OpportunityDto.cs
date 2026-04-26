@@ -20,6 +20,7 @@ public class OpportunityDto
         CryptoId = o.CryptoId,
         Type = o.Type,
         TargetPrice = o.TargetPrice,
+        CurrentPrice = o.CurrentPrice,
         Status = o.Status,
         CreatedAt = o.CreatedAt,
         TriggeredAt = o.TriggeredAt

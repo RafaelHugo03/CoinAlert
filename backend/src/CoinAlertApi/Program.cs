@@ -15,13 +15,11 @@ builder.Services.RegisterHttpClients();
 builder.Services.RegisterSignalR();
 builder.Services.RegisterHostedServices();
 
-
 var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
 app.UseRouting();
-app.UseStaticFiles();
 app.MapControllers();
 app.MapHub<CryptoPriceHub>("/hubs/crypto-price");
 
