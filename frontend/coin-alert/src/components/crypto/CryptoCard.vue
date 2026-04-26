@@ -6,7 +6,7 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
-  createOpportunity: [cryptoId: string]
+  'create-opportunity': [cryptoId: string]
 }>()
 
 const COIN_LABELS: Record<string, string> = {
