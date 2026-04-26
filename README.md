@@ -110,6 +110,10 @@ O worker em background `PriceMonitorService` executa a cada **5 segundos**:
    - Evento **SignalR** (`OpportunityTriggered`) enviado a todos os clientes conectados — a página de Oportunidades atualiza instantaneamente.
    - **Notificação push no navegador** com o nome da moeda, tipo do alerta, preço-alvo e preço atual.
 
+> **Notificações no navegador:** ao acessar o CoinAlert pela primeira vez, o navegador exibirá uma solicitação de permissão para enviar notificações. Clique em **Permitir** para receber os alertas. Sem essa permissão, o disparo continuará funcionando normalmente (SignalR + atualização da tela), mas nenhuma notificação push será exibida.
+>
+> Caso tenha bloqueado por engano, reative em: **Configurações do navegador → Privacidade e segurança → Notificações → `http://localhost:3000` → Permitir**.
+
 ---
 
 ## Preços em Tempo Real
